@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fetch JSON.GZ Data</title>
+    <script src="https://cdn.jsdelivr.net/npm/pako/dist/pako.min.js"></script>
+</head>
+<body>
+    <h1>Data Viewer</h1>
+    <p>Masukkan ID untuk melihat data:</p>
+    <input type="text" id="idInput" placeholder="Masukkan ID (contoh: 56241684)">
+    <button onclick="fetchData()">Lihat Data</button>
+
+    <pre id="output"></pre>
+
+    <script>
+        async function fetchData() {
+            const id = document.getElementById('idInput').value.trim();
+            if (!id) {
+                alert('Silakan masukkan ID terlebih dahulu.');
+                return;
+            }
+
+            const outputElement = document.getElementById('output');
+            outputElement.textContent = 'Memuat data...';
+
+            try {
+                // URL sumber data
+                const sourceUrl = `https://awokwok.netlify.app/${id}.json.gz`;
+
+                // Mengambil data dari URL sumber
+                const response = await fetch(sourceUrl, {
+                    method: 'GET',
+                    headers: { 'Accept-Encoding': 'gzip' }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                // Membaca data sebagai array buffer
+                const arrayBuffer = await response.arrayBuffer();
+
+                // Mendekompresi data menggunakan pako
+                const uint8Array = new Uint8Array(arrayBuffer);
+                const decompressedData = pako.inflate(uint8Array, { to: 'string' });
+
+                // Parsing data JSON
+                const jsonData = JSON.parse(decompressedData);
+
+                // Menampilkan data di halaman
+                outputElement.textContent = JSON.stringify(jsonData, null, 2);
+            } catch (error) {
+                console.error('Error fetching or decompressing data:', error);
+                outputElement.textContent = `Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
